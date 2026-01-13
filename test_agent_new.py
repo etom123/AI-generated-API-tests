@@ -77,24 +77,7 @@ Example format:
             print(f"❌ Failed to parse test cases: {e}")
             # Fallback test cases based on schema
             fallback_cases = []
-            # for endpoint in schema:
-            #     if endpoint['method'] == 'POST' and endpoint['example_payload']:
-            #         fallback_cases.extend([
-            #             {
-            #                 "test_name": f"test_{endpoint['path'].replace('/', '_')}_valid",
-            #                 "method": endpoint['method'],
-            #                 "path": endpoint['path'],
-            #                 "payload": endpoint['example_payload'],
-            #                 "expected_status": 200
-            #             },
-            #             {
-            #                 "test_name": f"test_{endpoint['path'].replace('/', '_')}_empty",
-            #                 "method": endpoint['method'],
-            #                 "path": endpoint['path'],
-            #                 "payload": {},
-            #                 "expected_status": 422
-            #             }
-            #         ])
+           
             return fallback_cases
       
     

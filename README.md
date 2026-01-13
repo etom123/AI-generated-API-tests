@@ -95,7 +95,7 @@ flowchart TD
 ## 🚀 Quick Start
 
 1. 📥 Clone the repository
-2. 🔧 Install dependencies: `pip install fastapi uvicorn requests pytest`
+2. 🔧 Install dependencies: `pip install -r requirements.txt`
 3. 🧠 Setup Ollama: `ollama pull llama3`
 4. 🚀 Start API: `cd MyApi && uvicorn main:app --reload`
 5. 🤖 Generate tests: `python test_agent_new.py`
