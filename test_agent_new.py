@@ -14,21 +14,41 @@ class TestAgent:
         """Step 1: Generate test cases from schema"""
         prompt = f"""You are a senior QA automation engineer.
 
-Given this API schema:
+Given this API schema with resolved examples:
 {json.dumps(schema, indent=2)}
 
-Generate API test cases in STRICT JSON format.
+Generate comprehensive API test cases in STRICT JSON format.
+
+For each endpoint, create test cases for:
+1. Valid payload (use example_payload as reference)
+2. Missing required fields
+3. Invalid data types
+4. Empty payload
 
 Each test case must include:
-- test_name
-- payload
-- expected_status
+- test_name: descriptive name
+- method: HTTP method (GET, POST, etc.)
+- path: API endpoint path
+- payload: actual JSON data (NOT schema references)
+- expected_status: HTTP status code
 
-Rules:
-- Output ONLY valid JSON
-- Do NOT include explanations
-- Do NOT include markdown
-- Do NOT include comments"""
+IMPORTANT:
+- Use REAL data values, not schema references like $ref
+- For strings use actual text like "John Doe"
+- For integers use actual numbers like 25
+- Output ONLY valid JSON array
+- NO markdown, explanations, or comments
+
+Example format:
+[
+  {{
+    "test_name": "test_create_user_valid",
+    "method": "POST",
+    "path": "/users",
+    "payload": {{"name": "John Doe", "age": 25}},
+    "expected_status": 200
+  }}
+]"""
         
         response = requests.post(f"{self.llm_url}/api/generate",
                                json={"model": "llama3", "prompt": prompt, "stream": False})
@@ -55,7 +75,27 @@ Rules:
             return test_cases
         except Exception as e:
             print(f"❌ Failed to parse test cases: {e}")
-            # Fallback test cases
+            # Fallback test cases based on schema
+            fallback_cases = []
+            # for endpoint in schema:
+            #     if endpoint['method'] == 'POST' and endpoint['example_payload']:
+            #         fallback_cases.extend([
+            #             {
+            #                 "test_name": f"test_{endpoint['path'].replace('/', '_')}_valid",
+            #                 "method": endpoint['method'],
+            #                 "path": endpoint['path'],
+            #                 "payload": endpoint['example_payload'],
+            #                 "expected_status": 200
+            #             },
+            #             {
+            #                 "test_name": f"test_{endpoint['path'].replace('/', '_')}_empty",
+            #                 "method": endpoint['method'],
+            #                 "path": endpoint['path'],
+            #                 "payload": {},
+            #                 "expected_status": 422
+            #             }
+            #         ])
+            return fallback_cases
       
     
     def generate_pytest_code(self, test_cases):
@@ -66,11 +106,22 @@ Rules:
 Rules:
 - Import requests
 - Use BASE_URL = "http://localhost:8000"
-- Create complete pytest functions
-- 
-- Use the exact payload and expected_status from test cases
+- Create complete pytest functions with descriptive names
+- Use the EXACT method, path, payload, and expected_status from test cases
+- Use requests.post(), requests.get(), etc. for HTTP calls
+- Construct full URL using BASE_URL + path
+- Assert response.status_code == expected_status
 - Output ONLY Python code
-- NO explanations or markdown"""
+- NO explanations, markdown, or comments
+
+Example format:
+import requests
+
+BASE_URL = "http://localhost:8000"
+
+def test_create_user_valid():
+    response = requests.post(BASE_URL + "/users", json={{"name": "John", "age": 25}})
+    assert response.status_code == 200"""
         
         response = requests.post(f"{self.llm_url}/api/generate",
                                json={"model": "llama3", "prompt": prompt, "stream": False})
